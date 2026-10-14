@@ -1,6 +1,7 @@
 import streamlit as st
 
-from utils.ui import setup_page, page_header, section, kpi, callout, safe_page_link
+from utils.casos import DEFAULTS, calcular_casos
+from utils.ui import setup_page, page_header, section, kpi, callout, safe_page_link, show_table
 
 setup_page("Tablero de Ingeniería Financiera", "💎")
 page_header(
@@ -44,19 +45,23 @@ for fila in (MODULOS[:3], MODULOS[3:]):
                 safe_page_link(ruta, label="Abrir módulo")
 
 st.write("")
-col_eq, col_info = st.columns([1.2, 1], gap="large")
-with col_eq:
-    section("Equipo de trabajo")
-    EQUIPO = [
-        ("Mariana Arbeláez", "Interés simple, interés compuesto, rentabilidad y equivalencia de tasas"),
-        ("Evelyn Jiménez", "Series uniformes y gradientes (aritméticos y geométricos)"),
-        ("María Lucía Cadavid", "Tablas de amortización, panel principal y consolidación de casos"),
-    ]
-    for nombre, modulos in EQUIPO:
+
+section("Equipo de trabajo")
+EQUIPO = [
+    ("Mariana Arbeláez", "Interés simple, interés compuesto, rentabilidad y equivalencia de tasas"),
+    ("Evelyn Jiménez", "Series uniformes y gradientes (aritméticos y geométricos)"),
+    ("María Lucía Cadavid", "Tablas de amortización, panel principal y consolidación de casos"),
+]
+cols = st.columns(3, gap="medium")
+for col, (nombre, modulos) in zip(cols, EQUIPO):
+    with col:
         with st.container(border=True):
             st.markdown(f"**{nombre}**")
             st.caption(modulos)
-with col_info:
-    section("Resumen de casos aplicados")
-    callout("Aquí se mostrará, por caso, el producto, la tasa efectiva anual, el valor total pagado o "
-            "recibido y la decisión recomendada. Se alimenta desde la página Casos aplicados.", "info")
+
+st.write("")
+section("Resumen de casos aplicados", "Se actualiza con los datos que ingreses en la página Casos aplicados.")
+params = st.session_state.get("casos_params", DEFAULTS)
+show_table(calcular_casos(params))
+if "casos_params" not in st.session_state:
+    callout("Estás viendo los valores iniciales. Abre Casos aplicados para usar tus datos reales.", "info")

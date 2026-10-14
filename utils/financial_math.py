@@ -4,6 +4,9 @@ Convención: todas las tasas entran como decimal (0.025 = 2.5 %).
 """
 import math
 
+import numpy as np
+import pandas as pd
+
 # ---------------------------------------------------------------------------
 # Constantes compartidas por las páginas
 # ---------------------------------------------------------------------------
@@ -126,3 +129,97 @@ def ea_neta(ea, retencion, anios=1.0):
     VF_neto/C = 1 + ((1+EA)^t − 1)(1 − ret);  EA_neta = (VF_neto/C)^(1/t) − 1."""
     factor = 1 + ((1 + ea) ** anios - 1) * (1 - retencion)
     return factor ** (1 / anios) - 1
+
+
+# ---------------------------------------------------------------------------
+# SERIES UNIFORMES (vencidas y anticipadas)
+# ---------------------------------------------------------------------------
+def factor_vp_serie(i, n):
+    """a(n,i) = (1 − (1+i)^−n) / i   (serie vencida)."""
+    return n if i == 0 else (1 - (1 + i) ** -n) / i
+
+
+def factor_vf_serie(i, n):
+    """s(n,i) = ((1+i)^n − 1) / i   (serie vencida)."""
+    return n if i == 0 else ((1 + i) ** n - 1) / i
+
+
+def vp_serie(cuota, i, n, anticipada=False):
+    vp = cuota * factor_vp_serie(i, n)
+    return vp * (1 + i) if anticipada else vp
+
+
+def vf_serie(cuota, i, n, anticipada=False):
+    vf = cuota * factor_vf_serie(i, n)
+    return vf * (1 + i) if anticipada else vf
+
+
+def cuota_desde_vp(vp, i, n, anticipada=False):
+    cuota = vp / factor_vp_serie(i, n)
+    return cuota / (1 + i) if anticipada else cuota
+
+
+def cuota_desde_vf(vf, i, n, anticipada=False):
+    cuota = vf / factor_vf_serie(i, n)
+    return cuota / (1 + i) if anticipada else cuota
+
+
+# ---------------------------------------------------------------------------
+# GRADIENTES (flujos vencidos: la primera cuota cae al final del periodo 1)
+# ---------------------------------------------------------------------------
+def flujos_gradiente_aritmetico(a1, g, n):
+    """A_k = A1 + (k−1)·G"""
+    return np.array([a1 + g * k for k in range(int(n))], dtype=float)
+
+
+def flujos_gradiente_geometrico(a1, g, n):
+    """A_k = A1·(1+g)^(k−1)"""
+    return np.array([a1 * (1 + g) ** k for k in range(int(n))], dtype=float)
+
+
+def vp_flujos(flujos, i):
+    return float(sum(f / (1 + i) ** (k + 1) for k, f in enumerate(flujos)))
+
+
+def vf_flujos(flujos, i):
+    n = len(flujos)
+    return float(sum(f * (1 + i) ** (n - k - 1) for k, f in enumerate(flujos)))
+
+
+def vp_gradiente_aritmetico_formula(a1, g, n, i):
+    a = factor_vp_serie(i, n)
+    return a1 * a + (g / i) * (a - n / (1 + i) ** n)
+
+
+def vp_gradiente_geometrico_formula(a1, g, n, i):
+    if abs(i - g) < 1e-12:
+        return n * a1 / (1 + i)
+    return a1 * (1 - ((1 + g) / (1 + i)) ** n) / (i - g)
+
+
+# ---------------------------------------------------------------------------
+# AMORTIZACIÓN
+# ---------------------------------------------------------------------------
+def cuota_fija(capital, i, n):
+    return capital / factor_vp_serie(i, n)
+
+
+def tabla_cuota_fija(capital, i, n):
+    cuota = cuota_fija(capital, i, n)
+    saldo, filas = capital, []
+    for k in range(1, int(n) + 1):
+        interes = saldo * i
+        abono = cuota - interes
+        saldo -= abono
+        filas.append((k, cuota, interes, abono, saldo))
+    return pd.DataFrame(filas, columns=["Periodo", "Cuota", "Intereses", "Abono a capital", "Saldo"])
+
+
+def tabla_abono_constante(capital, i, n):
+    abono = capital / n
+    saldo, filas = capital, []
+    for k in range(1, int(n) + 1):
+        interes = saldo * i
+        saldo -= abono
+        filas.append((k, abono + interes, interes, abono, saldo))
+    return pd.DataFrame(filas, columns=["Periodo", "Cuota", "Intereses", "Abono a capital", "Saldo"])
