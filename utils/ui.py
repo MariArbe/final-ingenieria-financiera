@@ -161,11 +161,19 @@ def show_table(df, **kwargs):
 
 
 def verification_table(rows, tol=1e-6):
-    """rows: lista de (nombre, resultado_del_modulo, calculo_manual)."""
+    """rows: lista de (nombre, resultado_del_modulo, calculo_manual[, escala]).
+
+    La tolerancia es relativa: tol × max(1, |manual|, escala). La `escala` opcional
+    sirve cuando el valor esperado es 0 (p. ej. saldo final de un crédito): sin ella
+    la tolerancia quedaría absoluta (1e-6) y el error de redondeo acumulado en
+    cientos de periodos sobre un capital grande la superaría sin que haya error real.
+    """
     data, todo_ok = [], True
-    for nombre, modelo, manual in rows:
+    for fila in rows:
+        nombre, modelo, manual = fila[:3]
+        escala = abs(fila[3]) if len(fila) > 3 else 0.0
         diff = abs(modelo - manual)
-        ok = diff <= tol * max(1.0, abs(manual))
+        ok = diff <= tol * max(1.0, abs(manual), escala)
         todo_ok = todo_ok and ok
         data.append({
             "Prueba": nombre,
