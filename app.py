@@ -60,8 +60,7 @@ for col, (nombre, modulos) in zip(cols, EQUIPO):
             st.caption(modulos)
 
 st.write("")
-section("Resumen de casos aplicados", "Se actualiza con los datos que ingreses en la página Casos aplicados.")
+section("Resumen de casos aplicados",
+        "Ofertas consultadas el 17 de octubre de 2026; se actualiza si cambias los datos en Casos aplicados.")
 params = st.session_state.get("casos_params", DEFAULTS)
 show_table(calcular_casos(params))
-if "casos_params" not in st.session_state:
-    callout("Estás viendo los valores iniciales. Abre Casos aplicados para usar tus datos reales.", "info")

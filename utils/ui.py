@@ -224,7 +224,7 @@ div[data-testid="stLayoutWrapper"] > div[data-testid="stVerticalBlock"]
 .tbl tbody tr:last-child td { border-bottom: none; }
 .tbl tbody tr:hover td { background: #FFF6FA; }
 .tbl td.num, .tbl th.num { text-align: right; }
-.tbl td.num { white-space: nowrap; }
+.tbl td.num, .tbl td.nw { white-space: nowrap; }
 .tbl td:first-child { color: var(--ink); font-weight: 500; }
 .tbl .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
              border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
@@ -311,7 +311,8 @@ def empty_state(title, text):
 
 
 def money(x, decimals=0):
-    return f"${x:,.{decimals}f}"
+    # Negativos como -$150,000 (no $-150,000)
+    return f"-${abs(x):,.{decimals}f}" if x < 0 and round(abs(x), decimals) > 0 else f"${abs(x):,.{decimals}f}"
 
 
 def pct(x, decimals=4):
@@ -365,8 +366,12 @@ def _formato(fmt, v):
     m = re.fullmatch(r"(.*)%(,?)\.(\d+)f(.*)", fmt or "")
     if m:
         pre, _, dec, post = m.groups()
-        return f"{pre}{v:,.{int(dec)}f}{post}"
-    return f"{v:,.2f}"
+        dec = int(dec)
+        if round(v, dec) == 0:
+            v = 0.0                                   # evita "-0.00" por residuos de redondeo
+        signo = "-" if v < 0 else ""
+        return f"{signo}{pre}{abs(v):,.{dec}f}{post}"   # -$1,000.00 y no $-1,000.00
+    return f"{0.0 if round(v, 2) == 0 else v:,.2f}"
 
 
 def _celda(valor, fmt):
@@ -409,8 +414,13 @@ def show_table(df, column_config=None, max_rows_visible=12, **_):
             celdas.append((c, contenido, es_num))
         filas_html.append(celdas)
 
+    cortas = {c: (not numericas[c]) and len(df) > 0 and
+                 max(len(str(v)) for v in df[c].tolist()) <= 24 for c in cols}
+
     def clase(c):
-        return ' class="num"' if (numericas[c] or (num_txt[c] and len(df))) else ""
+        if numericas[c] or (num_txt[c] and len(df)):
+            return ' class="num"'
+        return ' class="nw"' if cortas[c] else ""
 
     head = "".join(f"<th{clase(c)}>{_h(_html.escape(str(c)))}</th>" for c in cols)
     body = "".join(
@@ -440,10 +450,12 @@ def verification_table(rows, tol=1e-6):
         diff = abs(modelo - manual)
         ok = diff <= tol * max(1.0, abs(manual), escala)
         todo_ok = todo_ok and ok
+        # Residuos de redondeo como -0.00000002 se muestran como 0 (no como "-0.000000")
+        ver = lambda x: 0.0 if abs(x) < 5e-7 else x
         data.append({
             "Prueba": nombre,
-            "Resultado del módulo": f"{modelo:,.6f}",
-            "Cálculo manual": f"{manual:,.6f}",
+            "Resultado del módulo": f"{ver(modelo):,.6f}",
+            "Cálculo manual": f"{ver(manual):,.6f}",
             "Diferencia": f"{diff:.2e}",
             "Estado": "✅ Coincide" if ok else "❌ Revisar",
         })
