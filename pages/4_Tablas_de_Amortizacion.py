@@ -10,7 +10,7 @@ from utils.financial_math import (
 )
 from utils.ui import (
     setup_page, page_header, section, kpi, callout, style_fig,
-    show_plot, show_table, verification_table, money, pct, STONE, WINE, BLUSH, ROSE,
+    show_plot, show_table, verification_table, money, pct, STONE, WINE, BLUSH, ROSE, WINE_FILL,
 )
 
 setup_page("Tablas de amortización", "🧾")
@@ -148,7 +148,7 @@ with tab_tab:
                             line=dict(color=STONE, width=2, dash="dash"))
         fig.add_scatter(x=[0] + df["Periodo"].tolist(), y=[capital] + df["Saldo"].tolist(), mode="lines",
                         name="Saldo", line=dict(color=WINE, width=3), fill="tozeroy",
-                        fillcolor="rgba(136,19,55,0.10)")
+                        fillcolor=WINE_FILL)
         fig.update_yaxes(tickprefix="$", tickformat=",.0f")
         style_fig(fig, "Saldo de la deuda", f"Periodo ({per_nombre.lower()})", "Saldo (COP)")
         fig.update_layout(showlegend=hay_mod, height=300)
