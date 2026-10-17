@@ -63,6 +63,9 @@ section[data-testid="stSidebar"] [data-testid="stSidebarNavLink"][aria-current="
     border-radius: 0 4px 4px 0; background: var(--wine);
 }
 section[data-testid="stSidebar"] [data-testid="stSidebarNavSeparator"] { border-color: var(--line); }
+/* La página principal se llama app.py (lo exige el despliegue); en el menú se muestra "Sobre la app" */
+section[data-testid="stSidebar"] span[label="app"] p { font-size: 0; }
+section[data-testid="stSidebar"] span[label="app"] p::after { content: "Sobre la app"; font-size: 0.875rem; }
 .side-brand { display: flex; align-items: center; gap: 10px; margin: 4px 0 6px 0; }
 .side-heart { font-size: 1.7rem; line-height: 1;
               background: linear-gradient(160deg, #FF5C93 0%, #D6336C 100%);
@@ -169,9 +172,6 @@ a[data-testid="stPageLink-NavLink"]:hover { background: #FFF7FA; border-color: v
 .sec-title .hrt { width: .6em; height: .6em; color: var(--rose); margin-top: .42em; }
 .side-heart .hrt { width: 1.45rem; height: 1.45rem; color: var(--rose); }
 .side-heart { background: none; -webkit-background-clip: initial; background-clip: initial; }
-.side-foot { font-size: .78rem; color: var(--muted); margin-top: 18px; display: flex;
-             align-items: center; gap: 6px; }
-.side-foot .hrt { color: var(--rose); width: .85em; height: .85em; }
 .kpi-accent { position: relative; overflow: hidden; }
 .kpi-accent .kpi-heart { position: absolute; right: -14px; bottom: -22px; color: #FFFFFF;
                          opacity: .10; pointer-events: none; }
@@ -262,7 +262,6 @@ def setup_page(title, icon="💎"):
         )
         st.caption("Docente: Adriana Arango L.")
         st.caption("Entrega: jueves 29 de octubre de 2026")
-        st.markdown(f'<div class="side-foot">Hecho con {HEART} en la UPB</div>', unsafe_allow_html=True)
 
 
 def _h(text):
