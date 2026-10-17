@@ -1,4 +1,7 @@
 """Tema visual y componentes reutilizables para todo el tablero."""
+import html as _html
+import re
+
 import pandas as pd
 import streamlit as st
 
@@ -12,6 +15,11 @@ MUTED = "#8A717D"       # texto secundario
 PINK = "#D6336C"        # etiquetas, ejes y cifras de las tarjetas
 GRID = "#F6E4EC"
 WINE_FILL = "rgba(140,20,80,0.08)"   # área bajo la curva principal
+
+# Corazón en SVG (nítido a cualquier tamaño y toma el color del texto)
+HEART = ('<svg class="hrt" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2s-7.6-4.7-10.1-9.5'
+         'C.3 8.4 2.2 4.2 6.2 3.8c2.2-.2 4 .9 5.8 3.1 1.8-2.2 3.6-3.3 5.8-3.1 4 .4 5.9 4.6 4.3 7.9'
+         'C19.6 16.5 12 21.2 12 21.2z"/></svg>')
 
 _CSS = """
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
@@ -151,6 +159,88 @@ div[data-testid="stExpander"] summary p { font-weight: 600; color: var(--ink); }
 a[data-testid="stPageLink-NavLink"] { display: inline-flex; padding: 4px 12px; margin-top: 4px; }
 a[data-testid="stPageLink-NavLink"] p { color: var(--pink); font-weight: 600; }
 a[data-testid="stPageLink-NavLink"]:hover { background: #FFF7FA; border-color: var(--pink); }
+
+/* ---------- Corazones ---------- */
+.hrt { width: .78em; height: .78em; fill: currentColor; display: inline-block;
+       vertical-align: -0.06em; flex: none; }
+.page-head h1 .hrt { width: .38em; height: .38em; color: var(--rose); margin-left: .16em;
+                     vertical-align: .62em; }
+.sec-title { display: flex; align-items: flex-start; gap: 8px; }
+.sec-title .hrt { width: .6em; height: .6em; color: var(--rose); margin-top: .42em; }
+.side-heart .hrt { width: 1.45rem; height: 1.45rem; color: var(--rose); }
+.side-heart { background: none; -webkit-background-clip: initial; background-clip: initial; }
+.side-foot { font-size: .78rem; color: var(--muted); margin-top: 18px; display: flex;
+             align-items: center; gap: 6px; }
+.side-foot .hrt { color: var(--rose); width: .85em; height: .85em; }
+.kpi-accent { position: relative; overflow: hidden; }
+.kpi-accent .kpi-heart { position: absolute; right: -14px; bottom: -22px; color: #FFFFFF;
+                         opacity: .10; pointer-events: none; }
+.kpi-accent .kpi-heart .hrt { width: 104px; height: 104px; }
+.kpi-accent > div:not(.kpi-heart) { position: relative; }
+
+/* ---------- Distribución equilibrada ---------- */
+/* Menos separación entre columnas: el contenido gana ancho y la página se ve pareja */
+div[data-testid="stHorizontalBlock"] { gap: 1.25rem !important; }
+/* Filas "hoja" (sin columnas anidadas): todas las tarjetas de la fila con la misma altura */
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stHorizontalBlock"])) {
+    align-items: stretch !important;
+}
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stHorizontalBlock"]))
+    > div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"] { height: 100%; }
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stHorizontalBlock"]))
+    > div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"]
+    > div[data-testid="stLayoutWrapper"]:only-child { flex: 1 1 auto; }
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stHorizontalBlock"]))
+    > div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"]
+    > div[data-testid="stLayoutWrapper"]:only-child > div[data-testid="stVerticalBlock"] { height: 100%; }
+/* Tarjetas KPI de una fila: misma altura, nota abajo */
+div[data-testid="stElementContainer"]:only-child:has(.kpi) { flex: 1 1 auto; }
+div[data-testid="stElementContainer"]:only-child:has(.kpi) [data-testid="stMarkdown"],
+div[data-testid="stElementContainer"]:only-child:has(.kpi) [data-testid="stMarkdown"] > div,
+div[data-testid="stElementContainer"]:only-child:has(.kpi) [data-testid="stMarkdownContainer"] { height: 100%; }
+.kpi { display: flex; flex-direction: column; }
+.kpi-note { margin-top: auto; padding-top: 10px; }
+/* Las tarjetas de módulos alinean el botón abajo */
+div[data-testid="stLayoutWrapper"] > div[data-testid="stVerticalBlock"]
+    > div[data-testid="stElementContainer"]:has(a[data-testid="stPageLink-NavLink"]) { margin-top: auto; }
+/* Fórmulas: nunca se cortan; si no caben, se desplazan dentro de la tarjeta */
+.stApp .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; margin: .55em 0; }
+.stApp .katex-display { scrollbar-width: none; }
+.stApp .katex-display::-webkit-scrollbar { display: none; }
+.stApp .katex-display > .katex { font-size: 1.03em; }
+
+/* ---------- Tablas con la estética de los gráficos ---------- */
+.tbl-card { background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
+            padding: 6px 8px 8px 8px; margin: 2px 0 14px 0; }
+.tbl-scroll { overflow: auto; max-height: var(--tbl-max, none); border-radius: 14px; }
+.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .88rem; margin: 0;
+       font-variant-numeric: tabular-nums; }
+.stApp .tbl th, .stApp .tbl td { border: none; }
+.tbl thead th { position: sticky; top: 0; z-index: 1; background: #FFFFFF; text-align: left;
+                color: var(--pink); font-weight: 600; font-size: .8rem; padding: 12px 10px 10px 10px;
+                border-bottom: 2px solid var(--line) !important; vertical-align: bottom; line-height: 1.3; }
+.tbl tbody td { padding: 10px 10px; color: #3F3239; border-bottom: 1px solid #FAEEF3 !important;
+                vertical-align: top; }
+.tbl tbody tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover td { background: #FFF6FA; }
+.tbl td.num, .tbl th.num { text-align: right; }
+.tbl td.num { white-space: nowrap; }
+.tbl td:first-child { color: var(--ink); font-weight: 500; }
+.tbl .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
+             border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.tbl .pill-ok { background: #FCE7EF; color: var(--wine); }
+.tbl .pill-ok .hrt { color: var(--rose); }
+.tbl .pill-bad { background: #FFF1D6; color: #8A4B08; }
+
+/* Estado vacío */
+.empty { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); text-align: center;
+         padding: 54px 28px 50px 28px; margin: 4px 0 12px 0; }
+.empty .empty-heart { display: inline-flex; align-items: center; justify-content: center; width: 72px;
+                      height: 72px; border-radius: 50%; background: #FCE7EF; color: var(--rose);
+                      margin-bottom: 16px; }
+.empty .empty-heart .hrt { width: 32px; height: 32px; }
+.empty h3 { font-size: 1.2rem; font-weight: 700; color: var(--ink); margin: 0 0 6px 0; padding: 0; }
+.empty p { color: var(--muted); margin: 0 auto; max-width: 52ch; font-size: .93rem; line-height: 1.55; }
 """
 
 
@@ -165,13 +255,14 @@ def setup_page(title, icon="💎"):
     st.markdown(f"<style>{_CSS}</style>", unsafe_allow_html=True)
     with st.sidebar:
         st.markdown(
-            '<div class="side-brand"><span class="side-heart">&#10084;</span>'
+            f'<div class="side-brand"><span class="side-heart">{HEART}</span>'
             '<span class="side-title">Ingeniería Financiera</span></div>'
             '<div class="side-sub">Universidad Pontificia Bolivariana</div>',
             unsafe_allow_html=True,
         )
         st.caption("Docente: Adriana Arango L.")
         st.caption("Entrega: jueves 29 de octubre de 2026")
+        st.markdown(f'<div class="side-foot">Hecho con {HEART} en la UPB</div>', unsafe_allow_html=True)
 
 
 def _h(text):
@@ -181,13 +272,13 @@ def _h(text):
 
 def page_header(title, subtitle):
     st.markdown(
-        f'<div class="page-head"><h1>{_h(title)}</h1><p>{_h(subtitle)}</p></div>',
+        f'<div class="page-head"><h1>{_h(title)}{HEART}</h1><p>{_h(subtitle)}</p></div>',
         unsafe_allow_html=True,
     )
 
 
 def section(title, caption=None):
-    html = f'<div class="sec-title">{_h(title)}</div>'
+    html = f'<div class="sec-title">{HEART}<span>{_h(title)}</span></div>'
     if caption:
         html += f'<div class="sec-caption">{_h(caption)}</div>'
     st.markdown(html, unsafe_allow_html=True)
@@ -198,8 +289,9 @@ def kpi(label, value, note=None, accent=False):
     note_html = f'<div class="kpi-note">{_h(note)}</div>' if note else ""
     # Cifras cortas se ven grandes; las largas se reducen para caber en una línea
     tam = 180 / max(len(str(value)), 6)
+    marca = f'<div class="kpi-heart">{HEART}</div>' if accent else ""
     st.markdown(
-        f'<div class="{cls}"><div class="kpi-label">{_h(label)}</div>'
+        f'<div class="{cls}">{marca}<div class="kpi-label">{_h(label)}</div>'
         f'<div class="kpi-value" style="font-size: clamp(1rem, {tam:.1f}cqi, 2.1rem)">{_h(value)}</div>'
         f'{note_html}</div>',
         unsafe_allow_html=True,
@@ -208,6 +300,15 @@ def kpi(label, value, note=None, accent=False):
 
 def callout(text, kind="info"):
     st.markdown(f'<div class="callout callout-{kind}">{_h(text)}</div>', unsafe_allow_html=True)
+
+
+def empty_state(title, text):
+    """Tarjeta centrada para cuando una sección aún no tiene datos."""
+    st.markdown(
+        f'<div class="empty"><div class="empty-heart">{HEART}</div><h3>{_h(title)}</h3>'
+        f'<p>{_h(text)}</p></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def money(x, decimals=0):
@@ -253,11 +354,76 @@ def show_plot(fig):
         st.plotly_chart(fig, use_container_width=True)
 
 
-def show_table(df, **kwargs):
-    try:
-        st.dataframe(df, width="stretch", hide_index=True, **kwargs)
-    except Exception:
-        st.dataframe(df, use_container_width=True, hide_index=True, **kwargs)
+_NUM_TXT = re.compile(r"^[\s$−\-+(]*[\d.,]+[\d.,e+\-%)\s]*$")
+
+
+def _formato(fmt, v):
+    """Aplica los formatos de st.column_config.NumberColumn que usa el tablero."""
+    if fmt == "percent":
+        return f"{v * 100:,.4f}%"
+    if fmt in ("%d", "%i"):
+        return f"{int(round(v)):,}"
+    m = re.fullmatch(r"(.*)%(,?)\.(\d+)f(.*)", fmt or "")
+    if m:
+        pre, _, dec, post = m.groups()
+        return f"{pre}{v:,.{int(dec)}f}{post}"
+    return f"{v:,.2f}"
+
+
+def _celda(valor, fmt):
+    """Devuelve (html, es_numero) para una celda."""
+    if valor is None or (isinstance(valor, float) and pd.isna(valor)):
+        return "", False
+    if isinstance(valor, str):
+        if valor.startswith("✅"):
+            return f'<span class="pill pill-ok">{HEART}{_h(_html.escape(valor[1:].strip()))}</span>', False
+        if valor.startswith("❌"):
+            return f'<span class="pill pill-bad">{_h(_html.escape(valor[1:].strip()))}</span>', False
+        return _h(_html.escape(valor)), bool(_NUM_TXT.match(valor))
+    if isinstance(valor, bool):
+        return ("Sí" if valor else "No"), False
+    if isinstance(valor, int) or (hasattr(valor, "dtype") and pd.api.types.is_integer(valor)):
+        return _h(_formato(fmt, valor) if fmt else f"{int(valor):,}"), True
+    if isinstance(valor, float) or pd.api.types.is_number(valor):
+        return _h(_formato(fmt, float(valor))), True
+    return _h(_html.escape(str(valor))), False
+
+
+def show_table(df, column_config=None, max_rows_visible=12, **_):
+    """Tabla con la misma estética de los gráficos: tarjeta blanca, encabezado rosado,
+    cifras alineadas y encabezado fijo cuando la tabla es larga."""
+    formatos = {}
+    for col, cfg in (column_config or {}).items():
+        tc = (cfg or {}).get("type_config") or {}
+        if tc.get("format"):
+            formatos[col] = tc["format"]
+
+    cols = list(df.columns)
+    numericas = {c: pd.api.types.is_numeric_dtype(df[c]) for c in cols}
+    filas_html = []
+    num_txt = {c: True for c in cols}
+    for fila in df.itertuples(index=False, name=None):
+        celdas = []
+        for c, v in zip(cols, fila):
+            contenido, es_num = _celda(v, formatos.get(c))
+            num_txt[c] = num_txt[c] and (es_num or contenido == "")
+            celdas.append((c, contenido, es_num))
+        filas_html.append(celdas)
+
+    def clase(c):
+        return ' class="num"' if (numericas[c] or (num_txt[c] and len(df))) else ""
+
+    head = "".join(f"<th{clase(c)}>{_h(_html.escape(str(c)))}</th>" for c in cols)
+    body = "".join(
+        "<tr>" + "".join(f"<td{clase(c)}>{contenido}</td>" for c, contenido, _ in celdas) + "</tr>"
+        for celdas in filas_html
+    )
+    alto = f' style="--tbl-max: {44 * max_rows_visible + 46}px"' if len(df) > max_rows_visible else ""
+    st.markdown(
+        f'<div class="tbl-card"><div class="tbl-scroll"{alto}><table class="tbl">'
+        f"<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div></div>",
+        unsafe_allow_html=True,
+    )
 
 
 def verification_table(rows, tol=1e-6):
@@ -282,7 +448,7 @@ def verification_table(rows, tol=1e-6):
             "Diferencia": f"{diff:.2e}",
             "Estado": "✅ Coincide" if ok else "❌ Revisar",
         })
-    show_table(pd.DataFrame(data))
+    show_table(pd.DataFrame(data), max_rows_visible=40)
     if todo_ok:
         callout("Todas las verificaciones coinciden con el cálculo manual.", "ok")
     else:

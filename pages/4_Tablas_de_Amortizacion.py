@@ -10,7 +10,7 @@ from utils.financial_math import (
 )
 from utils.ui import (
     setup_page, page_header, section, kpi, callout, style_fig,
-    show_plot, show_table, verification_table, money, pct, STONE, WINE, BLUSH, ROSE, WINE_FILL,
+    show_plot, show_table, verification_table, empty_state, money, pct, STONE, WINE, BLUSH, ROSE, WINE_FILL,
 )
 
 setup_page("Tablas de amortización", "🧾")
@@ -164,20 +164,23 @@ with tab_tab:
         style_fig(fig2, "Composición del pago", f"Periodo ({per_nombre.lower()})", "Pago (COP)")
         show_plot(fig2)
 
-        section("Tabla de amortización", sistema)
-        col_cfg = {c: st.column_config.NumberColumn(format="$%.2f") for c in MONEY_COLS}
-        col_cfg["Tasa periódica"] = st.column_config.NumberColumn(format="percent")
-        show_table(df, column_config=col_cfg)
-        st.download_button("Descargar tabla (CSV)", df.to_csv(index=False).encode("utf-8"),
-                           file_name="tabla_amortizacion.csv", mime="text/csv")
+    # La tabla va a todo el ancho: tiene 8 columnas y así se lee sin desplazarse de lado
+    st.write("")
+    section("Tabla de amortización", sistema)
+    col_cfg = {c: st.column_config.NumberColumn(format="$%.2f") for c in MONEY_COLS}
+    col_cfg["Tasa periódica"] = st.column_config.NumberColumn(format="percent")
+    show_table(df, column_config=col_cfg)
+    st.download_button("Descargar tabla (CSV)", df.to_csv(index=False).encode("utf-8"),
+                       file_name="tabla_amortizacion.csv", mime="text/csv")
 
 # ---------------------------------------------------------------------------
 # ABONOS Y REFINANCIACIÓN
 # ---------------------------------------------------------------------------
 with tab_mod:
     if not hay_mod:
-        callout("Aún no hay abonos extraordinarios ni refinanciación. Configúralos en la pestaña "
-                "«Tabla y gráficos», en los desplegables debajo de los parámetros del crédito.", "info")
+        empty_state("Aún no hay abonos ni refinanciación",
+                    "Configúralos en la pestaña «Tabla y gráficos», en los desplegables debajo de los "
+                    "parámetros del crédito, y aquí verás cuánto cambian los intereses y el plazo.")
     else:
         int_base, int_mod = df_base["Intereses"].sum(), intereses
         tot_base = df_base["Pago total"].sum()
@@ -380,11 +383,12 @@ with tab_ver:
     with col_b:
         with st.container(border=True):
             section("Fórmulas empleadas")
-            st.latex(r"i=(1+EA)^{1/m}-1\qquad \text{Cuota fija: } A=P\,\frac{i}{1-(1+i)^{-n}}")
-            st.latex(r"\text{Abono constante: } K=\frac{P}{n}\qquad \text{Cuota}_k=K+i\,S_{k-1}")
-            st.latex(r"\text{Tras abono o refinanciación: } A'=S_k\,\frac{i'}{1-(1+i')^{-r}}\qquad"
-                     r"r=\left\lceil\frac{-\ln(1-S_k\,i/A)}{\ln(1+i)}\right\rceil")
-            st.latex(r"\text{Fisher: } 1+i=(1+r)(1+\pi)\qquad \text{Pago real}_k=\frac{\text{Pago}_k}{(1+\pi)^k}")
+            st.latex(r"i=(1+EA)^{1/m}-1")
+            st.latex(r"\text{Cuota fija: } A=P\,\frac{i}{1-(1+i)^{-n}}")
+            st.latex(r"\text{Abono constante: } K=\frac{P}{n},\quad \text{Cuota}_k=K+i\,S_{k-1}")
+            st.latex(r"\text{Tras abono o refinanciación: } A'=S_k\,\frac{i'}{1-(1+i')^{-r}}")
+            st.latex(r"\text{Cuotas pendientes: } r=\left\lceil\frac{-\ln(1-S_k\,i/A)}{\ln(1+i)}\right\rceil")
+            st.latex(r"\text{Fisher: } 1+i=(1+r)(1+\pi),\quad \text{Pago real}_k=\frac{\text{Pago}_k}{(1+\pi)^k}")
 
     st.write("")
     section("Verificación contra cálculo manual",

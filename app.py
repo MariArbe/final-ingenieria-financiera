@@ -36,7 +36,7 @@ MODULOS = [
      "pages/5_Casos_Aplicados.py"),
 ]
 for fila in (MODULOS[:3], MODULOS[3:]):
-    cols = st.columns(3, gap="medium")
+    cols = st.columns(len(fila), gap="medium")   # 3 + 2: cada fila ocupa todo el ancho
     for col, (icono, nombre, desc, ruta) in zip(cols, fila):
         with col:
             with st.container(border=True):
