@@ -223,3 +223,106 @@ def tabla_abono_constante(capital, i, n):
         saldo -= abono
         filas.append((k, abono + interes, interes, abono, saldo))
     return pd.DataFrame(filas, columns=["Periodo", "Cuota", "Intereses", "Abono a capital", "Saldo"])
+
+# ---------------------------------------------------------------------------
+# AMORTIZACIÓN CON ABONOS EXTRAORDINARIOS Y REFINANCIACIÓN
+# ---------------------------------------------------------------------------
+SIS_CUOTA_FIJA = "Cuota fija"
+SIS_ABONO_CONSTANTE = "Abono constante a capital"
+SISTEMAS_AMORTIZACION = [SIS_CUOTA_FIJA, SIS_ABONO_CONSTANTE]
+
+ABONO_REDUCE_PLAZO = "Reducir plazo"
+ABONO_REDUCE_CUOTA = "Reducir cuota"
+
+COLUMNAS_TABLA = ["Periodo", "Tasa periódica", "Cuota", "Intereses", "Abono a capital",
+                  "Abono extra", "Pago total", "Saldo"]
+
+
+def cuotas_pendientes(saldo, i, sistema, cuota=None, abono=None):
+    """Número de cuotas que faltan para extinguir `saldo` con la cuota (cuota fija)
+    o el abono a capital (abono constante) vigentes."""
+    if saldo <= 0:
+        return 0
+    if sistema == SIS_ABONO_CONSTANTE:
+        return math.ceil(saldo / abono - 1e-9)
+    if i == 0:
+        return math.ceil(saldo / cuota - 1e-9)
+    # n = −ln(1 − S·i/A) / ln(1 + i)
+    return math.ceil(-math.log(1 - saldo * i / cuota) / math.log(1 + i) - 1e-9)
+
+
+def tabla_amortizacion(capital, i, n, sistema=SIS_CUOTA_FIJA, abonos_extra=None,
+                       modo_abono=ABONO_REDUCE_PLAZO, refinanciacion=None):
+    """Tabla de amortización con abonos extraordinarios y una refinanciación opcional.
+
+    - `abonos_extra`: {periodo: monto}. Se paga al final del periodo, junto con la cuota,
+      y va completo a capital (si supera el saldo, se limita al saldo).
+    - `modo_abono`: tras un abono extra, "Reducir plazo" mantiene la cuota (cuota fija) o el
+      abono a capital (abono constante) y el crédito termina antes; "Reducir cuota" mantiene
+      el plazo y recalcula la cuota sobre el nuevo saldo.
+    - `refinanciacion`: {"periodo": k, "tasa": i_nueva, "cuotas": r}. Después de pagar la
+      cuota k (y su abono extra), el saldo se reprograma a la nueva tasa periódica en r
+      cuotas. Si `cuotas` es None se conservan las cuotas que faltaban.
+    """
+    abonos_extra = {int(k): float(v) for k, v in (abonos_extra or {}).items() if v and v > 0}
+    eps = 1e-9 * max(abs(capital), 1.0)
+
+    saldo, tasa, n_plan = float(capital), float(i), int(n)
+    cuota = cuota_fija(saldo, tasa, n_plan)
+    abono_k = saldo / n_plan
+    filas, k = [], 0
+
+    while saldo > eps and k < n_plan:
+        k += 1
+        interes = saldo * tasa
+        abono = (cuota - interes) if sistema == SIS_CUOTA_FIJA else abono_k
+        abono = min(abono, saldo)          # la última cuota solo paga lo que se debe
+        saldo -= abono
+        extra = min(abonos_extra.get(k, 0.0), saldo)
+        saldo -= extra
+        filas.append((k, tasa, interes + abono, interes, abono, extra, interes + abono + extra, saldo))
+
+        if saldo <= eps:
+            break
+        if extra > 0 and modo_abono == ABONO_REDUCE_CUOTA:
+            restantes = n_plan - k
+            cuota = cuota_fija(saldo, tasa, restantes)
+            abono_k = saldo / restantes
+        if refinanciacion and k == int(refinanciacion["periodo"]):
+            r = refinanciacion.get("cuotas")
+            if not r:
+                r = cuotas_pendientes(saldo, tasa, sistema, cuota, abono_k)
+            r = int(r)
+            tasa = float(refinanciacion["tasa"])
+            n_plan = k + r
+            cuota = cuota_fija(saldo, tasa, r)
+            abono_k = saldo / r
+
+    return pd.DataFrame(filas, columns=COLUMNAS_TABLA)
+
+
+def vp_pagos_tabla(df, columna="Pago total"):
+    """VP de los pagos de una tabla descontando con la tasa de cada periodo
+    (sirve aunque la tasa cambie por una refinanciación)."""
+    factores = np.cumprod(1 + df["Tasa periódica"].to_numpy())
+    return float((df[columna].to_numpy() / factores).sum())
+
+
+# ---------------------------------------------------------------------------
+# INFLACIÓN: PESOS CONSTANTES Y TASA REAL
+# ---------------------------------------------------------------------------
+def tasa_real(i_nominal, inflacion):
+    """Fisher: (1 + i) = (1 + r)(1 + π)  →  r = (1 + i)/(1 + π) − 1 (misma periodicidad)."""
+    return (1 + i_nominal) / (1 + inflacion) - 1
+
+
+def deflactar_tabla(df, inflacion_periodica):
+    """Expresa los pagos y el saldo de una tabla en pesos de hoy (periodo 0)."""
+    factor = (1 + inflacion_periodica) ** df["Periodo"].to_numpy()
+    return pd.DataFrame({
+        "Periodo": df["Periodo"],
+        "Pago nominal": df["Pago total"],
+        "Pago en pesos de hoy": df["Pago total"] / factor,
+        "Saldo nominal": df["Saldo"],
+        "Saldo en pesos de hoy": df["Saldo"] / factor,
+    })

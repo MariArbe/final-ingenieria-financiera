@@ -155,7 +155,8 @@ with tab_ver:
     with col_b:
         with st.container(border=True):
             section("Fórmulas empleadas")
-            st.latex(r"VP=A\,\frac{1-(1+i)^{-n}}{i}\qquad VF=A\,\frac{(1+i)^n-1}{i}\qquad \text{anticipada}=\text{vencida}\cdot(1+i)")
+            st.latex(r"VP=A\,\frac{1-(1+i)^{-n}}{i}\qquad VF=A\,\frac{(1+i)^n-1}{i}")
+            st.latex(r"\text{anticipada}=\text{vencida}\cdot(1+i)")
             st.latex(r"VP_{G}=A_1\,a_{n,i}+\frac{G}{i}\left(a_{n,i}-\frac{n}{(1+i)^n}\right)")
             st.latex(r"VP_{g}=A_1\,\frac{1-\left(\frac{1+g}{1+i}\right)^n}{i-g}")
 

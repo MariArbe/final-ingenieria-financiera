@@ -58,9 +58,15 @@ streamlit run app.py
 
 ## Casos aplicados
 
-Los datos iniciales de `utils/casos.py` son verosímiles, no de entidades reales. Antes de entregar,
-reemplázalos por ofertas publicadas y completa la **fuente** y la **fecha de consulta** de cada caso en
-la página *Casos aplicados*. La tarifa de retención en la fuente es un parámetro: confirma la vigente.
+Los datos de `utils/casos.py` son ofertas reales consultadas el 17 de octubre de 2026:
+
+| Caso | Fuente | Datos |
+|---|---|---|
+| 1. Inversión | Simulador de CDT de Bancolombia; simulador de cuenta de ahorros de Davivienda | CDT a 360 días, 9.40 % EA, retención 4 %; cuenta de ahorros 0.10 % EA con cuota de manejo de $16.500 al mes |
+| 2. Crédito | Bancolombia, crédito de libre inversión | Tasa fija desde 1.30 % MV (16.77 % EA); tasa variable IBR + puntos desde 15.36 % EA |
+| 3. Plan de ahorro | Nu Colombia, Cajitas de ahorro | Hasta 8.25 % EA |
+
+La alternativa "inflación + puntos" del caso 1 es un escenario de referencia, no una oferta consultada.
 
 ## Trabajo en equipo con Git
 

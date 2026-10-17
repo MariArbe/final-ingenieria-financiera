@@ -10,7 +10,7 @@ from utils.financial_math import (
 )
 from utils.ui import (
     setup_page, page_header, section, kpi, callout, style_fig,
-    show_plot, show_table, verification_table, money, STONE, WINE,
+    show_plot, show_table, verification_table, money, STONE, WINE, WINE_FILL,
 )
 
 setup_page("Interés simple y compuesto", "📈")
@@ -82,7 +82,7 @@ with tab_sim:
         fig2 = go.Figure()
         fig2.add_scatter(x=per_list, y=brecha, name="Compuesto − simple", mode="lines",
                          fill="tozeroy", line=dict(color=WINE, width=2),
-                         fillcolor="rgba(136,19,55,0.12)")
+                         fillcolor=WINE_FILL)
         fig2.update_yaxes(tickprefix="$", tickformat=",.0f")
         style_fig(fig2, "Diferencia acumulada entre regímenes",
                   f"Tiempo ({UNIDADES[unidad][1]})", "Diferencia (COP)")
