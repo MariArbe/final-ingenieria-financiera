@@ -67,16 +67,20 @@ with tab_ser:
         periodos = list(range(1, int(n_s) + 1))
         factor = 1 + i_s if ant else 1
         acumulado = [cuota_s * factor_vf_serie(i_s, k) * factor for k in periodos]
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.10,
+                            subplot_titles=("Pago por periodo", "Valor acumulado de la serie"))
         fig.add_bar(x=periodos, y=[cuota_s] * len(periodos), name="Pago del periodo",
-                    marker_color=BLUSH, secondary_y=False)
+                    marker_color=BLUSH, row=1, col=1)
         fig.add_scatter(x=periodos, y=acumulado, name="Valor acumulado", mode="lines",
-                        line=dict(color=WINE, width=3), secondary_y=True)
-        fig.update_yaxes(tickprefix="$", tickformat=",.0f", secondary_y=False, title_text="Pago (COP)")
-        fig.update_yaxes(tickprefix="$", tickformat=",.0f", secondary_y=True, title_text="Valor acumulado (COP)",
-                         showgrid=False)
+                        line=dict(color=WINE, width=3), row=2, col=1)
         style_fig(fig, "Flujo de pagos y valor acumulado de la serie", "Periodo", "Pago (COP)")
-        fig.update_yaxes(title_text="Pago (COP)", secondary_y=False)
+        fig.update_yaxes(tickprefix="$", tickformat=",.0f", title_text="Pago (COP)",
+                         rangemode="tozero", row=1, col=1)
+        fig.update_yaxes(tickprefix="$", tickformat=",.0f", title_text="Acumulado (COP)",
+                         rangemode="tozero", row=2, col=1)
+        fig.update_xaxes(title_text="", row=1, col=1)
+        fig.update_xaxes(title_text="Periodo", row=2, col=1)
+        fig.update_layout(height=560, showlegend=False)
         show_plot(fig)
 
 # ---------------------------------------------------------------------------
@@ -117,18 +121,25 @@ with tab_gra:
         st.write("")
         periodos_g = list(range(1, int(n_g) + 1))
         acumulado_g = [sum(flujos[j] * (1 + i_g) ** (k - j - 1) for j in range(k)) for k in periodos_g]
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.add_bar(x=periodos_g, y=flujos, name="Cuota del periodo", marker_color=BLUSH, secondary_y=False)
-        fig.add_scatter(x=periodos_g, y=acumulado_g, name="Valor acumulado", mode="lines",
-                        line=dict(color=WINE, width=3), secondary_y=True)
-        fig.add_hline(y=cuota_eq, line_dash="dash", line_color=STONE,
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.10,
+                            subplot_titles=("Cuota por periodo", "Valor acumulado"))
+        fig.add_bar(x=periodos_g, y=flujos, name="Cuota del periodo", marker_color=BLUSH, row=1, col=1)
+        fig.add_hline(y=cuota_eq, line_dash="dash", line_color=WINE, line_width=2,
                       annotation_text=f"Cuota uniforme equivalente: {money(cuota_eq)}",
-                      annotation_position="top left", secondary_y=False)
-        fig.update_yaxes(tickprefix="$", tickformat=",.0f", secondary_y=False, title_text="Cuota (COP)")
-        fig.update_yaxes(tickprefix="$", tickformat=",.0f", secondary_y=True,
-                         title_text="Valor acumulado (COP)", showgrid=False)
+                      annotation_position="top left",
+                      annotation_font=dict(color=WINE, size=12),
+                      annotation_bgcolor="rgba(255,255,255,0.85)",
+                      row=1, col=1)
+        fig.add_scatter(x=periodos_g, y=acumulado_g, name="Valor acumulado", mode="lines",
+                        line=dict(color=WINE, width=3), row=2, col=1)
         style_fig(fig, f"Flujo de cuotas y valor acumulado — gradiente {tipo_g.lower()}", "Periodo", "Cuota (COP)")
-        fig.update_yaxes(title_text="Cuota (COP)", secondary_y=False)
+        fig.update_yaxes(tickprefix="$", tickformat=",.0f", title_text="Cuota (COP)",
+                         rangemode="tozero", row=1, col=1)
+        fig.update_yaxes(tickprefix="$", tickformat=",.0f", title_text="Acumulado (COP)",
+                         rangemode="tozero", row=2, col=1)
+        fig.update_xaxes(title_text="", row=1, col=1)
+        fig.update_xaxes(title_text="Periodo", row=2, col=1)
+        fig.update_layout(height=560, showlegend=False)
         show_plot(fig)
 
         with st.expander("Ver tabla de flujos"):
