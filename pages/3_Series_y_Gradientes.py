@@ -146,10 +146,14 @@ with tab_gra:
             df = pd.DataFrame({
                 "Periodo": periodos_g,
                 "Cuota ($)": flujos,
+                "Incremento ($)": [0.0] + [flujos[k] - flujos[k - 1] for k in range(1, len(flujos))],
+                "Incremento (%)": [0.0] + [(flujos[k] / flujos[k - 1] - 1) * 100 for k in range(1, len(flujos))],
                 "Valor presente de la cuota ($)": [f / (1 + i_g) ** k for f, k in zip(flujos, periodos_g)],
             })
             show_table(df, column_config={
                 "Cuota ($)": st.column_config.NumberColumn(format="$%.2f"),
+                "Incremento ($)": st.column_config.NumberColumn(format="$%.2f"),
+                "Incremento (%)": st.column_config.NumberColumn(format="%.2f%%"),
                 "Valor presente de la cuota ($)": st.column_config.NumberColumn(format="$%.2f"),
             })
 
