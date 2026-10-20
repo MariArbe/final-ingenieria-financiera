@@ -116,14 +116,19 @@ with tab_gra:
 
         st.write("")
         periodos_g = list(range(1, int(n_g) + 1))
-        fig = go.Figure()
-        fig.add_bar(x=periodos_g, y=flujos, name="Cuota del periodo", marker_color=BLUSH)
-        fig.add_hline(y=cuota_eq, line_dash="dash", line_color=WINE,
+        acumulado_g = [sum(flujos[j] * (1 + i_g) ** (k - j - 1) for j in range(k)) for k in periodos_g]
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig.add_bar(x=periodos_g, y=flujos, name="Cuota del periodo", marker_color=BLUSH, secondary_y=False)
+        fig.add_scatter(x=periodos_g, y=acumulado_g, name="Valor acumulado", mode="lines",
+                        line=dict(color=WINE, width=3), secondary_y=True)
+        fig.add_hline(y=cuota_eq, line_dash="dash", line_color=STONE,
                       annotation_text=f"Cuota uniforme equivalente: {money(cuota_eq)}",
-                      annotation_position="top left")
-        fig.update_yaxes(tickprefix="$", tickformat=",.0f")
-        style_fig(fig, f"Flujo de cuotas con gradiente {tipo_g.lower()}", "Periodo", "Cuota (COP)")
-        fig.update_layout(hovermode="closest", showlegend=False)
+                      annotation_position="top left", secondary_y=False)
+        fig.update_yaxes(tickprefix="$", tickformat=",.0f", secondary_y=False, title_text="Cuota (COP)")
+        fig.update_yaxes(tickprefix="$", tickformat=",.0f", secondary_y=True,
+                         title_text="Valor acumulado (COP)", showgrid=False)
+        style_fig(fig, f"Flujo de cuotas y valor acumulado — gradiente {tipo_g.lower()}", "Periodo", "Cuota (COP)")
+        fig.update_yaxes(title_text="Cuota (COP)", secondary_y=False)
         show_plot(fig)
 
         with st.expander("Ver tabla de flujos"):
