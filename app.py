@@ -10,16 +10,6 @@ page_header(
     "e inversiones financieras reales.",
 )
 
-k1, k2, k3, k4 = st.columns(4)
-with k1:
-    kpi("Ponderación", "20%", "de la nota del curso")
-with k2:
-    kpi("Entrega y presentación", "29 oct 2026", "en el horario de clase")
-with k3:
-    kpi("Equipo", "3 integrantes", "cada uno explica cualquier módulo")
-with k4:
-    kpi("Casos aplicados", "3 mínimo", "deben usar los seis temas", accent=True)
-
 st.write("")
 section("Módulos", "Elige un módulo para modificar parámetros y ver los resultados al instante.")
 
