@@ -1,9 +1,10 @@
 """Verificación global del tablero (la usa el panel principal).
 
-Repite, con los valores iniciales de cada página, las mismas comprobaciones de su pestaña
-"Supuestos y verificación". Casos aplicados se verifica con los datos que estén en uso.
-Si cambias los valores iniciales de una página, cámbialos también aquí.
+Repite, con los valores iniciales de cada página (EJEMPLOS, en utils/resumen.py), las mismas
+comprobaciones de su pestaña "Supuestos y verificación". Casos aplicados se verifica con los
+datos que estén en uso.
 """
+from utils.resumen import EJEMPLOS
 from utils.casos import calcular_caso1, calcular_caso2, calcular_caso3, vf_gradiente_formula
 from utils.financial_math import (
     TASA_NOM_V, PERIODICIDADES, a_efectiva_anual, desde_efectiva_anual, tasa_combinada, ea_neta,
@@ -23,7 +24,8 @@ def coincide(modelo, manual, escala=0.0, tol=TOL):
 
 
 def _interes():
-    capital, tasa, n = 1_000_000.0, 0.025, 12
+    e = EJEMPLOS["interes"]
+    capital, tasa, n = e["capital"], e["tasa"], e["n"]
     vf_s, _ = interes_simple(capital, tasa, n)
     vf_c, int_c = interes_compuesto(capital, tasa, n)
     return [
@@ -36,13 +38,13 @@ def _interes():
 
 
 def _tasas():
-    m = 12
-    ea_in = 0.12
+    e = EJEMPLOS["tasas"]
+    m, ea_in = e["m"], e["ea"]
     eq = desde_efectiva_anual(ea_in, m)
     iv, ia = eq["periodica_vencida"], eq["periodica_anticipada"]
-    infl, pts = 0.055, 0.04
+    infl, pts = e["infl"], e["pts"]
     ea_comb = tasa_combinada(infl, pts)
-    cap, t, ea, ret = 20_000_000.0, 1.0, 0.10, 0.04
+    cap, t, ea, ret = e["cap_ret"], e["meses"] / 12, e["ea_ret"], e["ret"]
     bruto = cap * ((1 + ea) ** t - 1)
     neto = bruto * (1 - ret)
     return [
@@ -56,9 +58,10 @@ def _tasas():
 
 
 def _series():
-    cuota, i, n = 500_000.0, 0.015, 24
+    e = EJEMPLOS["series"]
+    cuota, i, n = e["cuota"], e["i"], e["n"]
     vp, vf = vp_serie(cuota, i, n), vf_serie(cuota, i, n)
-    a1, g, ig, ng = 300_000.0, 20_000.0, 0.015, 24
+    a1, g, ig, ng = e["a1"], e["g"], e["ig"], e["ng"]
     flujos = flujos_gradiente_aritmetico(a1, g, ng)
     vp_g, vf_g = vp_flujos(flujos, ig), vf_flujos(flujos, ig)
     cuota_eq = cuota_desde_vp(vp_g, ig, ng)
@@ -74,12 +77,14 @@ def _series():
 
 
 def _amortizacion():
-    capital, m, n = 50_000_000.0, 12, 60
-    ea = a_efectiva_anual(TASA_NOM_V, 0.18, m)
+    e = EJEMPLOS["amort"]
+    capital, m = e["capital"], e["m"]
+    n = int(round(e["anios"] * m))
+    ea = a_efectiva_anual(TASA_NOM_V, e["tasa_nmv"], m)
     i = (1 + ea) ** (1 / m) - 1
     t_cf = tabla_amortizacion(capital, i, n, SIS_CUOTA_FIJA)
     t_ac = tabla_amortizacion(capital, i, n, SIS_ABONO_CONSTANTE)
-    pi_p = 1.05 ** (1 / m) - 1
+    pi_p = (1 + e["infl"]) ** (1 / m) - 1
     dfl = deflactar_tabla(t_cf, pi_p)
     r_p = tasa_real(i, pi_p)
     reales = tasa_real(t_cf["Tasa periódica"].to_numpy(), pi_p)

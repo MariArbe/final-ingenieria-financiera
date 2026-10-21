@@ -232,6 +232,17 @@ div[data-testid="stLayoutWrapper"] > div[data-testid="stVerticalBlock"]
 .tbl .pill-ok .hrt { color: var(--rose); }
 .tbl .pill-bad { background: #FFF1D6; color: #8A4B08; }
 
+/* Tarjetas de resumen por módulo (panel principal) */
+.mod-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1rem; color: var(--ink); }
+.mod-value { font-size: 1.85rem; font-weight: 700; color: var(--pink); letter-spacing: -0.02em;
+             font-variant-numeric: tabular-nums; line-height: 1.15; margin-top: 8px; }
+.mod-what { font-size: .8rem; color: var(--pink); font-weight: 500; margin-top: 2px; }
+.mod-note { font-size: .84rem; color: var(--muted); line-height: 1.5; margin-top: 8px; }
+/* El minigráfico de una tarjeta de módulo (key "modcard_…") no lleva su propia tarjeta */
+[class*="st-key-modcard"] div[data-testid="stPlotlyChart"] {
+    box-shadow: none; padding: 0; background: transparent; border-radius: 0;
+}
+
 /* Estado vacío */
 .empty { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); text-align: center;
          padding: 54px 28px 50px 28px; margin: 4px 0 12px 0; }
@@ -299,6 +310,40 @@ def kpi(label, value, note=None, accent=False):
 
 def callout(text, kind="info"):
     st.markdown(f'<div class="callout callout-{kind}">{_h(text)}</div>', unsafe_allow_html=True)
+
+
+def resumen_modulo(icono, nombre, valor, que_es, nota):
+    """Encabezado de una tarjeta de resumen: módulo, cifra clave, qué es esa cifra y una frase."""
+    st.markdown(
+        f'<div class="mod-head"><span>{icono}</span><span>{_h(nombre)}</span></div>'
+        f'<div class="mod-value">{_h(valor)}</div><div class="mod-what">{_h(que_es)}</div>'
+        f'<div class="mod-note">{_h(nota)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def mini_fig(fig, height=150, etiquetas_x=False):
+    """Gráfico pequeño para una tarjeta: sin título, ejes discretos, sin leyenda.
+    `etiquetas_x=True` muestra los nombres del eje x (para barras por categoría)."""
+    fig.update_layout(
+        template="simple_white", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        height=height, margin=dict(l=4, r=4, t=8, b=4), showlegend=False, hovermode="x unified",
+        font=dict(family="DM Sans, Segoe UI, sans-serif", color=MUTED, size=10.5),
+        hoverlabel=dict(bgcolor="#FFFFFF", bordercolor="#F1CFDD", font=dict(color=INK)),
+        bargap=0.25,
+    )
+    try:
+        fig.update_layout(barcornerradius=4)
+    except Exception:
+        pass
+    fig.update_xaxes(showgrid=False, showline=True, linecolor=GRID, ticks="", showticklabels=etiquetas_x,
+                     tickfont=dict(color=MUTED, size=10))
+    fig.update_yaxes(showgrid=True, gridcolor=GRID, zeroline=False, showline=False, ticks="",
+                     tickfont=dict(color=MUTED, size=10), nticks=3)
+    try:
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+    except Exception:
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def empty_state(title, text):
