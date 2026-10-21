@@ -366,6 +366,7 @@ def _formato(fmt, v):
     m = re.fullmatch(r"(.*)%(,?)\.(\d+)f(.*)", fmt or "")
     if m:
         pre, _, dec, post = m.groups()
+        pre, post = pre.replace("%%", "%"), post.replace("%%", "%")   # "%.2f%%" -> 1.00%
         dec = int(dec)
         if round(v, dec) == 0:
             v = 0.0                                   # evita "-0.00" por residuos de redondeo

@@ -27,6 +27,7 @@ final-ingenieria-financiera/
 │   ├── __init__.py
 │   ├── financial_math.py           # Todas las fórmulas del curso (sin Streamlit)
 │   ├── casos.py                    # Cálculo de los tres casos aplicados y sus valores iniciales
+│   ├── verificacion.py             # Verificación global que muestra el panel principal
 │   └── ui.py                       # Estilos y componentes visuales compartidos
 └── pages/                          # Un archivo por módulo; Streamlit los muestra en el menú
     ├── 1_Interes_Simple_y_Compuesto.py
@@ -42,6 +43,8 @@ final-ingenieria-financiera/
   Las tasas siempre entran como decimal (0.025 = 2.5 %).
 - **`utils/casos.py`:** la lógica de los casos. Lo comparten `pages/5_Casos_Aplicados.py` y el panel
   principal, para que ambos muestren los mismos números.
+- **`utils/verificacion.py`:** repite las comprobaciones de cada página con sus valores iniciales para
+  el panel principal. Si cambias los valores iniciales de una página, cámbialos también aquí.
 - **`utils/ui.py`:** el diseño. Cada página empieza con `setup_page(...)` y `page_header(...)`, y usa
   `kpi`, `callout`, `section`, `style_fig`, `show_plot`, `show_table` y `verification_table`.
 - **`pages/`:** solo pantalla (campos de entrada, gráficos y textos). No se escriben fórmulas aquí;
