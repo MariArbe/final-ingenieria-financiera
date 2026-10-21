@@ -66,3 +66,24 @@ def resumen_amortizacion():
 def resumen_casos(params):
     r1, r2, r3 = calcular_caso1(params["c1"]), calcular_caso2(params["c2"]), calcular_caso3(params["c3"])
     return dict(r1=r1, r2=r2, r3=r3)
+
+
+# Temas del curso que trabaja cada módulo (tabla del panel principal)
+TEMAS_CURSO = ["Interés simple", "Interés compuesto", "Rentabilidad y equivalencia de tasas",
+               "Series uniformes", "Gradientes", "Tablas de amortización"]
+
+TEMAS_POR_MODULO = [
+    ("Interés simple y compuesto", ["Interés simple", "Interés compuesto"],
+     "Valor futuro con cada régimen y su diferencia; despeje de tasa, plazo, valor futuro y valor presente."),
+    ("Rentabilidad y tasas", ["Rentabilidad y equivalencia de tasas", "Interés compuesto"],
+     "Conversión entre tasas efectivas, nominales y periódicas, vencidas y anticipadas; inflación + puntos; "
+     "rentabilidad neta después de la retención en la fuente."),
+    ("Series y gradientes", ["Series uniformes", "Gradientes"],
+     "Cuota, valor presente y valor futuro de series vencidas y anticipadas; gradientes aritmético y "
+     "geométrico y su cuota uniforme equivalente."),
+    ("Tablas de amortización", ["Tablas de amortización", "Series uniformes",
+                                "Rentabilidad y equivalencia de tasas"],
+     "Cuota fija y abono constante a capital; abonos extraordinarios; refinanciación; costo real con inflación."),
+    ("Casos aplicados", list(TEMAS_CURSO),
+     "CDT frente a ahorros, crédito con tasa fija o variable y plan de ahorro con gradiente, con ofertas reales."),
+]

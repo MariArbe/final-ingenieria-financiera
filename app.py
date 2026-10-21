@@ -5,6 +5,7 @@ import streamlit as st
 from utils.casos import DEFAULTS, calcular_casos
 from utils.resumen import (
     resumen_interes, resumen_tasas, resumen_series, resumen_amortizacion, resumen_casos,
+    TEMAS_CURSO, TEMAS_POR_MODULO,
 )
 from utils.ui import (
     setup_page, page_header, section, kpi, callout, safe_page_link, show_table, show_plot, style_fig,
@@ -131,6 +132,24 @@ with fila2[1]:
 st.caption("Gráficos: interés simple (claro) y compuesto (oscuro) en el tiempo · tasa nominal equivalente según "
            "la periodicidad · cuotas del gradiente frente a la cuota fija (línea punteada) · saldo del crédito con "
            "cuota fija (oscuro) y abono constante (claro) · ganancia neta de cada inversión del caso 1.")
+
+# ---------------------------------------------------------------------------
+# TEMAS DEL CURSO EN CADA MÓDULO
+# ---------------------------------------------------------------------------
+st.write("")
+section("Temas del curso en cada módulo", "Qué temas trabaja cada módulo y qué se calcula en él.")
+show_table(pd.DataFrame([
+    {"Módulo": modulo, "Temas del curso": ", ".join(temas), "Qué se calcula": que}
+    for modulo, temas, que in TEMAS_POR_MODULO
+]))
+# Cada tema debe tener un módulo propio (sin contar Casos aplicados, que los reúne todos)
+sin_modulo = [t for t in TEMAS_CURSO
+              if not any(t in temas for modulo, temas, _ in TEMAS_POR_MODULO if modulo != "Casos aplicados")]
+if sin_modulo:
+    callout("Temas sin módulo: " + ", ".join(sin_modulo) + ".", "warn")
+else:
+    callout(f"Los {len(TEMAS_CURSO)} temas del curso tienen su propio módulo y, además, se aplican juntos en "
+            "los casos aplicados.", "ok")
 
 st.write("")
 col_ver, col_graf = st.columns([1, 1.65], gap="medium")
